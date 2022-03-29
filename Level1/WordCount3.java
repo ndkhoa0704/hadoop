@@ -26,6 +26,7 @@ import org.apache.hadoop.util.StringUtils;
 
 import org.apache.log4j.Logger;
 
+//Main class for MapReduce job
 public class WordCount3 extends Configured implements Tool {
 
   private static final Logger LOG = Logger.getLogger(WordCount3.class);
@@ -35,9 +36,12 @@ public class WordCount3 extends Configured implements Tool {
     System.exit(res);
   }
 
+  // Run class 
   public int run(String[] args) throws Exception {
+    // Initialize job
     Job job = Job.getInstance(getConf(), "wordcount");
     for (int i = 0; i < args.length; i += 1) {
+      // Detect stop_words.txt file by argument 
       if ("-skip".equals(args[i])) {
         job.getConfiguration().setBoolean("wordcount.skip.patterns", true);
         i += 1;
@@ -58,7 +62,9 @@ public class WordCount3 extends Configured implements Tool {
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
+  // Map Phase
   public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+    // Initialize input and output
     private final static IntWritable one = new IntWritable(1);
     private Text word = new Text();
     private boolean caseSensitive = false;
@@ -70,12 +76,15 @@ public class WordCount3 extends Configured implements Tool {
     protected void setup(Mapper.Context context)
         throws IOException,
         InterruptedException {
+
+      // Identify input data file and stop_words file 
       if (context.getInputSplit() instanceof FileSplit) {
         this.input = ((FileSplit) context.getInputSplit()).getPath().toString();
       } else {
         this.input = context.getInputSplit().toString();
       }
       Configuration config = context.getConfiguration();
+      // Setup case sensitivity and stop words flag 
       this.caseSensitive = config.getBoolean("wordcount.case.sensitive", false);
       if (config.getBoolean("wordcount.skip.patterns", false)) {
         URI[] localPaths = context.getCacheFiles();
@@ -83,11 +92,16 @@ public class WordCount3 extends Configured implements Tool {
       }
     }
 
+    //Get stop_words.txt file and parse 
     private void parseSkipFile(URI patternsURI) {
       LOG.info("Added file to the distributed cache: " + patternsURI);
+
+      // Identify stop_words.txt path and allocate resource
       try {
         BufferedReader fis = new BufferedReader(new FileReader(new File(patternsURI.getPath()).getName()));
         String pattern;
+
+        // Add each word in stop_words.txt file to ignore in the map phase 
         while ((pattern = fis.readLine()) != null) {
           patternsToSkip.add(pattern);
         }
@@ -100,14 +114,21 @@ public class WordCount3 extends Configured implements Tool {
     public void map(LongWritable offset, Text lineText, Context context)
         throws IOException, InterruptedException {
       String line = lineText.toString();
+      // Remove case sensitivity by convert to lowercase
       if (!caseSensitive) {
         line = line.toLowerCase();
       }
       Text currentWord = new Text();
+      /*
+      Read file line by line 
+      Use Regex to filter non-alphanum character for each word 
+      */
       for (String word : WORD_BOUNDARY.split(line)) {
+        // Check if word is in stop words pattern 
         if (word.isEmpty() || patternsToSkip.contains(word)) {
           continue;
         }
+        // Remove non-alphanumeric character
         if (word.matches(".*[^A-Za-z0-9].*")) {
           continue;
         }
@@ -117,11 +138,16 @@ public class WordCount3 extends Configured implements Tool {
     }
   }
 
+  //Reduce Phase
   public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void reduce(Text word, Iterable<IntWritable> counts, Context context)
         throws IOException, InterruptedException {
       int sum = 0;
+      /*
+      Sum up count of each word 
+      Return <word,count> pair 
+      */
       for (IntWritable count : counts) {
         sum += count.get();
       }
