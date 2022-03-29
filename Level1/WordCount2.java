@@ -19,6 +19,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
 
+//Main class for MapReduce job
 public class WordCount2 extends Configured implements Tool {
   private static final Logger LOG = Logger.getLogger(WordCount2.class);
 
@@ -26,8 +27,10 @@ public class WordCount2 extends Configured implements Tool {
     int res = ToolRunner.run(new WordCount2(), args);
     System.exit(res);
   }
-
+  
+  // Run class 
   public int run(String[] args) throws Exception {
+    // Initialize job
     Job job = Job.getInstance(getConf(), "wordcount");
     job.setJarByClass(this.getClass());
     // Use TextInputFormat, the default unless job.setInputFormatClass is used
@@ -41,12 +44,16 @@ public class WordCount2 extends Configured implements Tool {
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
+  // Map Phase
   public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+    // Initialize input and output
     private final static IntWritable one = new IntWritable(1);
     private Text word = new Text();
+    // Flag for case sensitivity
     private boolean caseSensitive = false;
     private static final Pattern WORD_BOUNDARY = Pattern.compile("\\s*\\b\\s*");
-
+    
+    //Class for checking case sensitivity
     protected void setup(Mapper.Context context)
         throws IOException,
         InterruptedException {
@@ -57,10 +64,16 @@ public class WordCount2 extends Configured implements Tool {
     public void map(LongWritable offset, Text lineText, Context context)
         throws IOException, InterruptedException {
       String line = lineText.toString();
+      // Remove case sensitivity by convert to lowercase
       if (!caseSensitive) {
         line = line.toLowerCase();
       }
       Text currentWord = new Text();
+
+      /*
+      Read file line by line 
+      Use Regex to filter non-alphanum character for each word 
+      */
       for (String word : WORD_BOUNDARY.split(line)) {
         if (word.isEmpty()) {
           continue;
@@ -74,11 +87,16 @@ public class WordCount2 extends Configured implements Tool {
     }
   }
 
+  //Reduce Phase
   public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void reduce(Text word, Iterable<IntWritable> counts, Context context)
         throws IOException, InterruptedException {
       int sum = 0;
+      /*
+      Sum up count of each word 
+      Return <word,count> pair 
+      */
       for (IntWritable count : counts) {
         sum += count.get();
       }

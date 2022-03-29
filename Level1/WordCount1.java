@@ -17,6 +17,7 @@ import org.apache.hadoop.io.Text;
 
 import org.apache.log4j.Logger;
 
+//Main class for MapReduce job
 public class WordCount1 extends Configured implements Tool {
 
   private static final Logger LOG = Logger.getLogger(WordCount1.class);
@@ -25,8 +26,9 @@ public class WordCount1 extends Configured implements Tool {
     int res = ToolRunner.run(new WordCount1(), args);
     System.exit(res);
   }
-
+  // Run class 
   public int run(String[] args) throws Exception {
+    // Initialize job
     Job job = Job.getInstance(getConf(), "wordcount");
     job.setJarByClass(this.getClass());
     // Use TextInputFormat, the default unless job.setInputFormatClass is used
@@ -38,8 +40,9 @@ public class WordCount1 extends Configured implements Tool {
     job.setOutputValueClass(IntWritable.class);
     return job.waitForCompletion(true) ? 0 : 1;
   }
-
+  // Map Phase
   public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+    // Initialize input and output
     private final static IntWritable one = new IntWritable(1);
     private Text word = new Text();
     private long numRecords = 0;
@@ -49,6 +52,10 @@ public class WordCount1 extends Configured implements Tool {
         throws IOException, InterruptedException {
       String line = lineText.toString();
       Text currentWord = new Text();
+      /*
+      Read file line by line 
+      Then map each word into <word,1> pair 
+      */
       for (String word : WORD_BOUNDARY.split(line)) {
         if (word.isEmpty()) {
           continue;
@@ -59,11 +66,16 @@ public class WordCount1 extends Configured implements Tool {
     }
   }
 
+  //Reduce Phase
   public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void reduce(Text word, Iterable<IntWritable> counts, Context context)
         throws IOException, InterruptedException {
       int sum = 0;
+      /*
+      Sum up count of each word 
+      Return <word,count> pair 
+      */
       for (IntWritable count : counts) {
         sum += count.get();
       }
