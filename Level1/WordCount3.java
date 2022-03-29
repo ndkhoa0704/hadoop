@@ -26,12 +26,12 @@ import org.apache.hadoop.util.StringUtils;
 
 import org.apache.log4j.Logger;
 
-public class WordCount extends Configured implements Tool {
+public class WordCount3 extends Configured implements Tool {
 
-  private static final Logger LOG = Logger.getLogger(WordCount.class);
+  private static final Logger LOG = Logger.getLogger(WordCount3.class);
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new WordCount(), args);
+    int res = ToolRunner.run(new WordCount3(), args);
     System.exit(res);
   }
 
@@ -106,11 +106,14 @@ public class WordCount extends Configured implements Tool {
       Text currentWord = new Text();
       for (String word : WORD_BOUNDARY.split(line)) {
         if (word.isEmpty() || patternsToSkip.contains(word)) {
-            continue;
+          continue;
         }
-            currentWord = new Text(word);
-            context.write(currentWord,one);
-        }             
+        if (word.matches(".*[^A-Za-z0-9].*")) {
+          continue;
+        }
+        currentWord = new Text(word);
+        context.write(currentWord, one);
+      }
     }
   }
 
@@ -126,4 +129,3 @@ public class WordCount extends Configured implements Tool {
     }
   }
 }
-

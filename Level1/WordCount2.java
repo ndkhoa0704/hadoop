@@ -19,11 +19,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
 
-public class WordCount extends Configured implements Tool {
-  private static final Logger LOG = Logger.getLogger(WordCount.class);
+public class WordCount2 extends Configured implements Tool {
+  private static final Logger LOG = Logger.getLogger(WordCount2.class);
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new WordCount(), args);
+    int res = ToolRunner.run(new WordCount2(), args);
     System.exit(res);
   }
 

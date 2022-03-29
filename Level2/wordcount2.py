@@ -6,8 +6,8 @@ class Count(MRJob):
 
     def mapper(self, _, line):
         for word in line.split():
-            if word.isalnum():
-                yield(word, 1)
+            # Lower case words
+            yield(word.lower(), 1)
     
     def reducer(self, word, counts):
         yield(word, sum(counts))

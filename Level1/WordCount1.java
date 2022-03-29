@@ -17,12 +17,12 @@ import org.apache.hadoop.io.Text;
 
 import org.apache.log4j.Logger;
 
-public class WordCount extends Configured implements Tool {
+public class WordCount1 extends Configured implements Tool {
 
-  private static final Logger LOG = Logger.getLogger(WordCount.class);
+  private static final Logger LOG = Logger.getLogger(WordCount1.class);
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new WordCount(), args);
+    int res = ToolRunner.run(new WordCount1(), args);
     System.exit(res);
   }
 
@@ -42,7 +42,7 @@ public class WordCount extends Configured implements Tool {
   public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
     private final static IntWritable one = new IntWritable(1);
     private Text word = new Text();
-    private long numRecords = 0;    
+    private long numRecords = 0;
     private static final Pattern WORD_BOUNDARY = Pattern.compile("\\s*\\b\\s*");
 
     public void map(LongWritable offset, Text lineText, Context context)
@@ -51,11 +51,11 @@ public class WordCount extends Configured implements Tool {
       Text currentWord = new Text();
       for (String word : WORD_BOUNDARY.split(line)) {
         if (word.isEmpty()) {
-            continue;
+          continue;
         }
-            currentWord = new Text(word);
-            context.write(currentWord,one);
-        }
+        currentWord = new Text(word);
+        context.write(currentWord, one);
+      }
     }
   }
 
